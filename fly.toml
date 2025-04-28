@@ -1,0 +1,19 @@
+app = "myreader"
+kill_signal = "SIGINT"
+kill_timeout = 5
+primary_region = 'sin'
+
+[mounts]
+  source = "vw_data"
+  destination = "/config"
+
+[http_service]
+  internal_port = 80
+  force_https = true
+  min_machines_running = 1
+
+[env]
+  FLY_APP='myreader'
+  DOMAIN_NAME='myreader.fly.dev'
+  DOMAIN='https://myreader.fly.dev'
+  TZ='Asia/Kolkata'

@@ -1,3 +1,32 @@
+
+# renovate: datasource=github-releases depName=rclone/rclone
+ARG RCLONE_VERSION=v1.64.0
+
+
+
+# Binary file names
+ARG RCLONE=rclone
+ARG RCLONE_DIRECTORY=rclone-${RCLONE_VERSION}-linux-amd64
+
+
+
+#
+# Rclone
+#
+FROM alpine:3.18 as rclone
+
+ARG RCLONE_VERSION
+ARG RCLONE
+
+ENV RCLONE_FILE=rclone-${RCLONE_VERSION}-linux-amd64.zip
+ARG RCLONE_DIRECTORY
+
+ENV RCLONE_URL=https://github.com/rclone/rclone/releases/download/${RCLONE_VERSION}/${RCLONE_FILE}
+
+WORKDIR /
+
+RUN wget "$RCLONE_URL" && unzip ${RCLONE_FILE} && chmod +x "$RCLONE_DIRECTORY/$RCLONE"
+
 # syntax=docker/dockerfile:1
 
 FROM ghcr.io/linuxserver/unrar:latest AS unrar
@@ -201,5 +230,17 @@ COPY --from=unrar /usr/bin/unrar-ubuntu /usr/bin/unrar
 # ports and volumes
 EXPOSE 8083
 VOLUME /config
-VOLUME /cwa-book-ingest
-VOLUME /calibre-library
+
+ARG RCLONE_DIRECTORY
+ARG RCLONE
+
+
+RUN apt update && apt install -y \
+  fuse3
+RUN mkdir -p /calibre-library
+
+ENV TZ="Asia/Kolkata"
+
+COPY --from=rclone ${RCLONE_DIRECTORY}/${RCLONE} /usr/bin/rclone
+
+COPY config/rclone.conf .
